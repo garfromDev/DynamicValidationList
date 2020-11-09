@@ -73,10 +73,6 @@ function decodeDependencyNote(noteText){
 * each time a cell is edited, check if this must trigger a change in validation List
 */
 function onEdit(e){
-  headerLine = PropertiesService.getDocumentProperties().getProperty('headerLine')
-  triggeringColumns = JSON.parse(PropertiesService.getDocumentProperties().getProperty('triggeringColumns'))
-  rangeSource = JSON.parse(PropertiesService.getDocumentProperties().getProperty('rangeSource'))
-  //alert(Object.keys(triggeringColumns) + "   " + Object.values(triggeringColumns));
   updateDynamicValidationListIfNeeded(e);
 }
 
@@ -87,7 +83,9 @@ function onEdit(e){
  * NOTE : multi-cell selection no taken into account
  */
 function updateDynamicValidationListIfNeeded(e){
-  //alert("on edit value: " + e.value + "  range " + e.range.getA1Notation()+ " row " + e.range.getRow() );
+  headerLine = PropertiesService.getDocumentProperties().getProperty('headerLine')
+  triggeringColumns = JSON.parse(PropertiesService.getDocumentProperties().getProperty('triggeringColumns'))
+  rangeSource = JSON.parse(PropertiesService.getDocumentProperties().getProperty('rangeSource'))
   if(e.range.getRow() <= headerLine){return} // do not handle headre line or above
   if(e.value == undefined){
     return;
@@ -134,7 +132,7 @@ function getRangeForValueFromSheet(triggerValue, sh)
 
 
 
-// ================================================ TESTS =================================
+// ================================================ TESTS ============================================
 // those test are not unit test, they are intended to interactively test the setup by adjusting values
 function test_onOpen(){
   onOpen({source: SpreadsheetApp.getActiveSpreadsheet()});

@@ -1,6 +1,38 @@
 //======== Support functions =============
 // could be used in other application
 
+
+/**
+* @param {Range} col mono-dimensional range (column or row)
+* @return {Integer} the last non-empty position (stops when more than 50 empty position to allow
+* for "hole" in the data series)
+*/
+function getLastRowForColumn(col) {
+  var values = col.getValues();
+  var lign = 0, lastNonEmpty = 0;
+  while( lign < values.length ) { 
+    if( values[lign] != "") {lastNonEmpty = lign}
+    if(lign++ - lastNonEmpty > 50) {break}
+  } // end while
+  return lastNonEmpty + 1; //because value array start at 0, rows at 1
+}
+
+
+/**
+* @param {Range} col mono-dimensional range (column or row)
+* @return {Integer} the first empty position 
+*/
+function getFirstEmptyRow(col) {
+  var values = col.getValues();
+  var lign = 0;
+  while( lign < values.length && values[lign] != "") { 
+    lign++;
+  } // end while
+  if(lign == values.length) { return false } // no empty position found 
+  return lign + 1; //because value array start at 0, rows at 1
+}
+
+
 /**
 *  Make the A1 notation for a given range in a given sheet 
 * @param {Range} range : the range (can be in a different sheet)
