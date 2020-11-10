@@ -78,7 +78,7 @@ function onEdit(e){
 
 
 /**
- * check if something has toi be done and triggers update of dependant columns
+ * check if something has to be done and triggers update of dependant columns
  * @param {*} e 
  * NOTE : multi-cell selection no taken into account
  */
@@ -110,8 +110,9 @@ function updateColValidationListFromSourceForValue(col, sheetName, e)
   const range = getRangeForValueFromSheet(e.value, getSheet(sheetName));
   if(!range){return};
   const line = e.range.getRow();
+  const sheet = e.range.getSheet();
   var rule = SpreadsheetApp.newDataValidation().requireValueInRange(range).build();
-  activeSheet().getRange(line, col).setDataValidation(rule);
+  sheet.getRange(line, col).setDataValidation(rule);
 }
 
 

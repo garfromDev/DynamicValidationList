@@ -8,14 +8,14 @@ const AUTO_IMPORT_TARGET = "Demandes"
 // parameters for the line to insert into the request list
 function toInsert() {
     return [
-        new Data(column=2,  value = new Date(), dataVal=false),
-        new Data(column=3,  value = "Ceva Biovac", dataVal=true),                    // request site
-        new Data(column=4,  value = "magali.bossiere@ceva.com", dataVal=false),      // requester
-        new Data(column=5,  value = ImportManager.getNextSouche(), dataVal=false),   // souche reference
-        new Data(column=12, value = "Identification", dataVal=false),
-        new Data(column=13, value = "Identification_malditof", dataVal=true),        // analysis requested
-        new Data(column=14, value = "Ceva Biovac", dataVal=false),
-        new Data(column=17, value = "Import auto depuis le souchier", dataVal=false)
+        new Data(column=2,  value = new Date()),
+        new Data(column=3,  value = "Ceva Biovac"),                    // request site
+        new Data(column=4,  value = "magali.bossiere@ceva.com"),      // requester
+        new Data(column=5,  value = ImportManager.getNextSouche()),   // souche reference
+        new Data(column=12, value = "Identification"),
+        new Data(column=13, value = "Identification_malditof"),        // analysis requested
+        new Data(column=14, value = "Ceva Biovac"),
+        new Data(column=17, value = "Import auto depuis le souchier")
     ];
 }
 
@@ -24,14 +24,17 @@ class Data {
     constructor(column, value, dataVal) {
         this.column = column;
         this.value = value;
-        this.dataVal = dataVal; // true if this column is trigering dataValidation list in other columns
     }
 }
 
 
 var ImportManager = {
 
+    /**
+     * get the value from the sheet AUTO_IMPORT_MNG to prep the ImportManager singleton
+     */
     init : function() {
+        // no error handling as there is no way to report error to user in a time triggered script
         this._aim = getSheet(AUTO_IMPORT_MNG);
         this._target_sheet = getSheet(AUTO_IMPORT_TARGET);
         this._lastMngLine = this._aim.getLastRow();
@@ -44,6 +47,12 @@ var ImportManager = {
         this._max_line_from = getFirstEmptyRow(this._import_from_sheet.getRange("C:C")) - 1;
     },
 
+    /**
+     * perform the creation of request for each souche in souchier, added a the end of
+     * AUTO_IMPORT_TARGET sheet  
+     * start line to import is taken from previous import in AUTO_IMPORT_MNG sheet  
+     * **Note** `init()` must have been called before
+     */
     performImport : function(){
        this.startImport();
        while(!this.import_finished()){
@@ -52,27 +61,38 @@ var ImportManager = {
        this.endImport();
     },
 
+    /**
+     * add a request line at _line_to_insert, based on information provided by toInsert()  
+     * this is an array of Data, pair of (column, value)
+     * set _line_to_insert to next line
+     */
     addRequest : function(){
         cols = toInsert();  // generate the row content
         cols.forEach(data => {
             let rng = this._target_sheet.getRange(this._line_to_insert, data.column)
             rng.setValue(data.value);
-            if(data.dataVal){ // force update of validation list because onEdit may not trigger properly
-                updateDynamicValidationListIfNeeded({value: data.value, range:rng});
-            }
         });
-
         this._line_to_insert++;
     },
 
+    /**
+     * return the souche reference from the souchier and increment pointer to the next
+     */
     getNextSouche : function(){
         return this._import_from_sheet.getRange(this._line_from++, COL_SOUCHE).getValue();
     },
 
+    /**
+     * true if _max_line_from has been processed, no more souches to import
+     */
     import_finished : function(){
         return this._line_from > this._max_line_from;
     },
 
+    /**
+     * Create a new porcess line with all information in the AUTO_IMPORT_MNG sheet  
+     * **Note** `init()` must have been called before
+     */
     startImport : function(){
         let cell = this._aim.getRange;
         let nextLine = this._lastMngLine + 1;
@@ -84,6 +104,9 @@ var ImportManager = {
         cell(nextLine, 6).setValue("STARTED...");
     },
 
+    /**
+     * mark the current process line in AUTO_IMPORT_MNG as DONE and point to the next one
+     */
     endImport(){
         let cell = this._aim.getRange;
         let nextLine = this._lastMngLine + 1;
@@ -93,7 +116,11 @@ var ImportManager = {
 
 }
 
-
+/**
+ * Main entry point  
+ * is called by the dayly time trigger  
+ * Will create request for all new souche in souchier since last execution
+ */
 function importFromSouchier(){
     ImportManager.init();
     ImportManager.performImport();
