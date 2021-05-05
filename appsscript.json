@@ -3,5 +3,16 @@
   "dependencies": {
   },
   "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8"
+  "runtimeVersion": "V8",
+  "sheets": {
+    "macros": [{
+      "menuName": "Verrouillage ligne",
+      "functionName": "Verrouillageligne",
+      "defaultShortcut": "Ctrl+Alt+Shift+9"
+    }, {
+      "menuName": "EnvoiMailDemandeAnalyse",
+      "functionName": "envoiMailDemandeAnalyse",
+      "defaultShortcut": "Ctrl+Alt+Shift+1"
+    }]
+  }
 }
