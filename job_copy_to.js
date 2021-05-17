@@ -144,26 +144,26 @@ var ExportManager = {
 function batch_make_repiquage_request(){
     // TODO: gestion erreurs
     ExportManager.init(
-    'Demandes',                                     // source sheet name
-    '113g_b6dqVSrTRSjRNYGKSyXMWk8oXmM4GNDTgRqhmqo', // target spreadsheet ID
-    'Demandes repiquages',                          // target sheet name
-    // maping des champs "source": "target"
-    {
-        "Référence souche demandeur (N°Cl si souchotèque Ceva Biovac)": "n°CL FMP12",
-        "": ""
-    },
-    ['Date'],                                       // target field filled with current date
-    "B",                                            // column to detect end of data in target file
-    //======!! make sure this field is mandatory !!!!!========
-    "Demandeur",                                    // fields to detect end of data in source file
-    //======!! make sure this field is mandatory !!!!!========
-    // target field filled with raw text "target_field_name": "text"
-    {
-        "Demandeur / origine demande": "Demande d'analyse (auto)",
-        "Destination repiquage": "Labo bactério"
-    },
-    ['Demande de 1er repiquage'],                   //field that must be true
-    ['Annuler demande']                             //field that must be false
+        'Demandes',                                     // source sheet name
+        '113g_b6dqVSrTRSjRNYGKSyXMWk8oXmM4GNDTgRqhmqo', // target spreadsheet ID
+        'Demandes repiquages',                          // target sheet name
+        // maping des champs "source": "target"
+        {
+            "Référence souche demandeur (N°Cl si souchotèque Ceva Biovac)": "n°CL FMP12",
+            "Date d'envoi ou transfert de la souche au labo bactériologie\n\n(N/A si souchotèque)" : "Commentaires"
+        },
+        //======!! make sure this field is mandatory !!!!!========
+        "B",                                            // column to detect end of data in target file
+        //======!! make sure this field is mandatory !!!!!========
+        "Demandeur",                                    // fields to detect end of data in source file
+        ['Date'],                                       // target field filled with current date
+        // target field filled with raw text "target_field_name": "text"
+        {
+            "Demandeur / origine demande": "Demande d'analyse (auto)",
+            "Destination repiquage": "Labo bactério"
+        },
+        ['Demande de 1er repiquage'],                   //field that must be true
+        ['Annuler demande']                             //field that must be false    
     );
     ExportManager.run_export();
 }
