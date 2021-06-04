@@ -3,8 +3,10 @@ var ExportManager = {
         target_not_empty_column = "B", 
         source_not_empty_field = "Demandeur",
         fields_with_date = [], fields_with_text = [],
-         must_be_true = [], must_be_false = [],
-         max_header_line = 3) {
+        must_be_true = [], must_be_false = [],
+        unique_id, 
+        force_last_line,
+        max_header_line = 3) {
         /**
          * @param {Sheet} source_sheet
          * @param {Sheet} target_sheet
@@ -24,6 +26,8 @@ var ExportManager = {
         this.fields_with_date = fields_with_date;
         this.fields_with_text = fields_with_text;
         this.max_header_line = max_header_line;
+        this.unique_id = unique_id;
+        this.set_last_line(force_last_line);
         this.get_column_for_fields();
     },
     
@@ -91,6 +95,13 @@ var ExportManager = {
         return getLastRowForColumn(this.target_sheet.getRange(letter + ":" + letter)) + 1;
     },
 
+    set_last_line(force_last_line){
+        var last_line_key = 'ExportManager.' + this.unique_id;
+        var last_line = PropertiesService.getScriptProperties().getProperty(last_line_key);
+        if(force_last_line > last_line){
+            PropertiesService.getScriptProperties().setProperty(last_line_key, force_last_line);
+        }
+    },
 
     copy_line_to_target : function(source_line, target_line){
         /**
@@ -121,14 +132,13 @@ var ExportManager = {
         var result = true;
         result = result && this.col_must_be_true.every(col => this.source_sheet.getRange(line, col).getValue());
         result = result && ! this.col_must_be_false.some(col => this.source_sheet.getRange(line, col).getValue());
-/*         this.col_must_be_true.foreach((col)=>{result = result && this.source_sheet.getRange(line, col).getValue()});
-        this.col_must_be_false.foreach((col)=>{result = result && !this.source_sheet.getRange(line, col).getValue()}) */
         return result;
     },
 
 
     run_export : function() {
-        last_line_exported = PropertiesService.getScriptProperties().getProperty('ExportManager.last_line_exported') || 1;
+        var last_line_key = 'ExportManager.' + this.unique_id;
+        last_line_exported = PropertiesService.getScriptProperties().getProperty(last_line_key) || 1;
         last_line_exported++;
         target_line = this.get_first_free_line_of_target();
         while(!this.end_of_data_reached(last_line_exported)){
@@ -137,7 +147,7 @@ var ExportManager = {
             }
             last_line_exported++;
         }
-        PropertiesService.getScriptProperties().setProperty('ExportManager.last_line_exporte', last_line_exported);
+        PropertiesService.getScriptProperties().setProperty(last_line_key, last_line_exported);
     }
 }
 
@@ -165,7 +175,9 @@ function batch_make_repiquage_request(){
             "Destination repiquage": "Labo bactério"
         },
         ['Demande de 1er repiquage'],                   //source field(s) that must all be true
-        ['Annuler demande']                             //source field(s) that must all be false    
+        ['Annuler demande'],                            //source field(s) that must all be false   
+        'batch_make_repiquage_request',                 //ID unique du script pour stocker les lignes atteintes
+        0                                               // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
     );
     ExportManager.run_export();
 }
@@ -195,7 +207,9 @@ function test_init(){
         "Destination repiquage": "Labo bactério"
     },
     ['Demande de 1er repiquage'],                   //field that must be true
-    ['Annuler demande']                             //field that must be false
+    ['Annuler demande'],                             //field that must be false
+    'testValue',
+    7
     );
     console.log("source sheet name. ", ExportManager.source_sheet.getName());
     console.log("target sheet name. ", ExportManager.target_sheet.getName());
@@ -209,5 +223,8 @@ function test_init(){
     console.log("1st line of target ", ExportManager.get_first_free_line_of_target());
     console.log("end of data reach 48  ", ExportManager.end_of_data_reached(48));
     console.log("must be exported 48  ", ExportManager.must_be_exported(48));
-    ExportManager.copy_line_to_target(48,ExportManager.get_first_free_line_of_target())
+    console.log("last_line", PropertiesService.getScriptProperties().getProperty('ExportManager.testValue'));
+    //ExportManager.copy_line_to_target(48,ExportManager.get_first_free_line_of_target())
 }
+
+//1875
