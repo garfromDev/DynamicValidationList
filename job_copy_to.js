@@ -138,21 +138,21 @@ var ExportManager = {
 
     run_export : function() {
         var last_line_key = 'ExportManager.' + this.unique_id;
-        last_line_exported = PropertiesService.getScriptProperties().getProperty(last_line_key) || 1;
+        var last_line_exported = parseInt(PropertiesService.getScriptProperties().getProperty(last_line_key)) || 1;
         last_line_exported++;
-        target_line = this.get_first_free_line_of_target();
+        var target_line = this.get_first_free_line_of_target();
         while(!this.end_of_data_reached(last_line_exported)){
-            if(this.must_be_exported()){
+            if(this.must_be_exported(last_line_exported)){
                 this.copy_line_to_target(last_line_exported, target_line++);
             }
             last_line_exported++;
         }
-        PropertiesService.getScriptProperties().setProperty(last_line_key, last_line_exported);
+        PropertiesService.getScriptProperties().setProperty(last_line_key, last_line_exported - 1);
     }
 }
 
 /** fonction a appeller depuis le declencheur horaire */
-function batch_make_repiquage_request(){
+function export_vers_demande_repiquage(){
     // TODO: gestion erreurs
     // NE PAS CHANGER L'ORDRE DES PARAMETRES, NE PAS EN SUPPRIMER !!!
     ExportManager.init(
@@ -161,31 +161,111 @@ function batch_make_repiquage_request(){
         'Demandes repiquages',                          // target sheet name
         // maping des champs "source": "target" séparé pas  des virgules
         {
-            "Référence souche demandeur (N°Cl si souchotèque Ceva Biovac)": "n°CL FMP12",
-            "Date d'envoi ou transfert de la souche au labo bactériologie\n\n(N/A si souchotèque)" : "Commentaires"
+            "Demandeur": "Demandeur / origine demande",
+            "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "n°CL FMP12",
+            "N° demande" : "N° demande\n(si applicable)",
+            "Labo\n(Auto)" : "Labo destinataire de l'envoi\n(si applicable)",
+            "Milieu de repiquage\n\n\n(si demande particulière)" : "Milieu\n(si demande particulière)",
+            "Condition d'incubation\n\n\n(si demande particulière)" : "Incubation\n(si demande particulière)",
+            "Nb de boîtes à repiquer\n\n\n(si demande particulière)" : "Nb de boîtes (si demande particulière)",
+            "Commentaire labo bactério" : "Commentaires (interne labo)",
+            "Commentaire à l'attention de Ceva Biovac" : "Commentaires demandeur\n(si applicable)"
         },
         //======!! make sure this field is mandatory !!!!!========
-        "B",                                            // column letter to detect end of data in target file
+        "A",                                            // column letter to detect end of data in target file
         //======!! make sure this field is mandatory !!!!!========
         "Demandeur",                                    // fields to detect end of data in source file
         ['Date'],                                       // target field filled with current date ['nom1', 'nom2'] ou [] si aucun
         // target field filled with raw text "target_field_name": "text". {} si aucun champ de type texte
         {
-            "Demandeur / origine demande": "Demande d'analyse (auto)",
             "Destination repiquage": "Labo bactério"
         },
-        ['Demande de 1er repiquage'],                   //source field(s) that must all be true
-        ['Annuler demande'],                            //source field(s) that must all be false   
-        'batch_make_repiquage_request',                 //ID unique du script pour stocker les lignes atteintes
-        0                                               // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
+        ['Demande de repiquage'],['Validation identification\n(Auto)']      //source field(s) that must all be true
+        ['Annuler demande'],                                                //source field(s) that must all be false   
+        'export_vers_demande_repiquage',                                    //ID unique du script pour stocker les lignes atteintes
+        49                                               // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
     );
     ExportManager.run_export();
 }
 
+function export_vers_planning_malditof(){
+    // TODO: gestion erreurs
+    // NE PAS CHANGER L'ORDRE DES PARAMETRES, NE PAS EN SUPPRIMER !!!
+    ExportManager.init(
+        'Demandes',                                                // source sheet name
+        '1mzA8VvlIOsF8eOoEwsa8keyCZI-74FRIeveB6JsPCl8', // target spreadsheet ID
+        'AV',                                                      // target sheet name
+        // maping des champs "source": "target" séparé pas  des virgules
+        {
+            "N° demande": "Origine demande",
+            "Date demande\n(envoi email Ctrl+Alt+Shift+1)": "Date de la demande",
+            "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Référence",
+            "GEB client\n(Auto)" : "GEB client\n(si applicable)",
+            "GEB Biovac\n(Auto)" : "GEB Biovac\n(si applicable)"
+        },
+        //======!! make sure this field is mandatory !!!!!========
+        "B",                                         // column letter to detect end of data in target file
+        //======!! make sure this field is mandatory !!!!!========
+        "Demandeur",                                          // fields to detect end of data in source file
+        ['Date transfert auto demande'],                      // target field filled with current date ['nom1', 'nom2'] ou [] si aucun
+        // target field filled with raw text "target_field_name": "text". {} si aucun champ de type texte
+        {},
+        ['Malditof'],                                                     //source field(s) that must all be true
+        ['Annuler demande'],                                              //source field(s) that must all be false   
+        'export_vers_planning_malditof',                 //ID unique du script pour stocker les lignes atteintes
+         0                                              // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
+    );
+    ExportManager.run_export();
+}
 
+function export_vers_suivi_analyses_externes(){
+    // TODO: gestion erreurs
+    // NE PAS CHANGER L'ORDRE DES PARAMETRES, NE PAS EN SUPPRIMER !!!
+    ExportManager.init(
+        'Demandes',                                                              // source sheet name
+        '1BWZ33Uw4vOfhAviM1xcDw74Ph9w5j3TxDjib9P5jvPA',                          // target spreadsheet ID
+        'Suivi des analyses externes',                                           // target sheet name
+        // maping des champs "source": "target" séparé pas  des virgules
+        {
+            "N° demande": "N° demande\n(si applicable)",
+            "Demandeur": "Demandeur",
+            "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Ref souche Biovac",
+            "Ref souche client\n(Auto)" : "Ref souche client\n(si applicable)",
+            "GEB Biovac\n(Auto)" : "GEB Biovac\n(si applicable)",
+            "Sérotype Biovac\n(Auto)" : "Sérotype Biovac\n(si applicable)",
+            "GEB client\n(Auto)" : "GEB client\n(si applicable)",
+        },
+        //======!! make sure this field is mandatory !!!!!========
+        "B",                                         // column letter to detect end of data in target file
+        //======!! make sure this field is mandatory !!!!!========
+        "Demandeur",                                          // fields to detect end of data in source file
+        ['Date transfert auto demande'],                      // target field filled with current date ['nom1', 'nom2'] ou [] si aucun
+        // target field filled with raw text "target_field_name": "text". {} si aucun champ de type texte
+        {},
+        ['Malditof'],                                                     //source field(s) that must all be true
+        ['Annuler demande'],                                              //source field(s) that must all be false   
+        'export_vers_suivi_analyses_externes',                 //ID unique du script pour stocker les lignes atteintes
+         0                                              // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
+    );
+    ExportManager.run_export();
+}
 // ================================================ TESTS ============================================
 // those test are not unit test, they are intended to interactively test the setup by adjusting values
+function reset_last_line(){
+  PropertiesService.getScriptProperties().setProperty("ExportManager.export_vers_planning_malditof", 30);
+}
 
+function check_last_line(){
+  console.log("export_vers_planning_malditof : ",
+    parseInt(PropertiesService.getScriptProperties().getProperty("ExportManager.export_vers_planning_malditof"))
+  );
+  console.log("export_vers_suivi_analyses_externes : ",
+    parseInt(PropertiesService.getScriptProperties().getProperty("ExportManager.export_vers_suivi_analyses_externes"))
+  );
+  console.log("export_vers_demande_repiquage : ",
+    parseInt(PropertiesService.getScriptProperties().getProperty("ExportManager.export_vers_demande_repiquage"))
+  );
+}
 function test_init(){
       ExportManager.init(
     'Demandes',                                     // source sheet name
@@ -226,5 +306,3 @@ function test_init(){
     console.log("last_line", PropertiesService.getScriptProperties().getProperty('ExportManager.testValue'));
     //ExportManager.copy_line_to_target(48,ExportManager.get_first_free_line_of_target())
 }
-
-//1875
