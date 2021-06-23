@@ -5,7 +5,7 @@ var ExportManager = {
         fields_with_date = [], fields_with_text = [],
         must_be_true = [], must_be_false = [],
         unique_id, 
-        force_last_line,
+        source_is_exported,
         max_header_line = 3) {
         /**
          * @param {Sheet} source_sheet
@@ -27,7 +27,7 @@ var ExportManager = {
         this.fields_with_text = fields_with_text;
         this.max_header_line = max_header_line;
         this.unique_id = unique_id;
-        this.set_last_line(force_last_line);
+        this.source_is_exported = source_is_exported;
         this.get_column_for_fields();
     },
     
@@ -84,6 +84,7 @@ var ExportManager = {
                 'target_col' : this.find_columns_for([this.fields_to_map[field]], this.target_sheet).find(x=>x!==undefined)
             }
         }
+        this.col_is_exported = this.find_columns_for([this.source_is_exported]);
     },
 
 
@@ -95,13 +96,6 @@ var ExportManager = {
         return getLastRowForColumn(this.target_sheet.getRange(letter + ":" + letter)) + 1;
     },
 
-    set_last_line(force_last_line){
-        var last_line_key = 'ExportManager.' + this.unique_id;
-        var last_line = PropertiesService.getScriptProperties().getProperty(last_line_key);
-        if(force_last_line > last_line){
-            PropertiesService.getScriptProperties().setProperty(last_line_key, force_last_line);
-        }
-    },
 
     copy_line_to_target : function(source_line, target_line){
         /**
@@ -130,24 +124,36 @@ var ExportManager = {
 
     must_be_exported : function(line){
         var result = true;
+        const is_exported = this.source_sheet.getRange(line, this.col_is_exported).getValue();
+        if(is_exported){
+            result = result && (is_exported.indexOf(this.unique_id) < 0); // index < 0 means id not found, so not exported yet
+        }
         result = result && this.col_must_be_true.every(col => this.source_sheet.getRange(line, col).getValue());
         result = result && ! this.col_must_be_false.some(col => this.source_sheet.getRange(line, col).getValue());
         return result;
     },
 
+    set_exported: function(line){
+        range_is_exported = this.source_sheet.getRange(line, this.col_is_exported);
+        var is_exported = range_is_exported.getValue()
+        if(is_exported.indexOf(this.unique_id) < 0){
+            is_exported = (is_exported || '') + '\n' + this.unique_id;
+            range_is_exported.setValue(is_exported);
+        }
+    },
+
 
     run_export : function() {
         var last_line_key = 'ExportManager.' + this.unique_id;
-        var last_line_exported = parseInt(PropertiesService.getScriptProperties().getProperty(last_line_key)) || 1;
-        last_line_exported++;
+        var last_line_exported = this.max_header_line + 1;
         var target_line = this.get_first_free_line_of_target();
         while(!this.end_of_data_reached(last_line_exported)){
             if(this.must_be_exported(last_line_exported)){
                 this.copy_line_to_target(last_line_exported, target_line++);
+                this.set_exported(last_line_exported);
             }
             last_line_exported++;
         }
-        PropertiesService.getScriptProperties().setProperty(last_line_key, last_line_exported - 1);
     }
 }
 
@@ -183,7 +189,7 @@ function export_vers_demande_repiquage(){
         ['Demande de repiquage'],['Validation identification\n(Auto)']      //source field(s) that must all be true
         ['Annuler demande'],                                                //source field(s) that must all be false   
         'export_vers_demande_repiquage',                                    //ID unique du script pour stocker les lignes atteintes
-        49                                               // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
+        'suivi ligne exportées',                                            // header of column to store exportation status
     );
     ExportManager.run_export();
 }
@@ -198,7 +204,7 @@ function export_vers_planning_malditof(){
         // maping des champs "source": "target" séparé pas  des virgules
         {
             "N° demande": "Origine demande",
-            "Date demande\n(envoi email Ctrl+Alt+Shift+1)": "Date de la demande",
+            "Date demande\n(envoi email Ctrl+Alt+Shift+1)": "Date de la demande ou date réception souche",
             "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Référence",
             "GEB client\n(Auto)" : "GEB client\n(si applicable)",
             "GEB Biovac\n(Auto)" : "GEB Biovac\n(si applicable)"
@@ -213,7 +219,7 @@ function export_vers_planning_malditof(){
         ['Malditof'],                                                     //source field(s) that must all be true
         ['Annuler demande'],                                              //source field(s) that must all be false   
         'export_vers_planning_malditof',                 //ID unique du script pour stocker les lignes atteintes
-         0                                              // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
+        'suivi ligne exportées',                                            // header of column to store exportation status
     );
     ExportManager.run_export();
 }
@@ -231,28 +237,28 @@ function export_vers_suivi_analyses_externes(){
             "Demandeur": "Demandeur",
             "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Ref souche Biovac",
             "Ref souche client\n(Auto)" : "Ref souche client\n(si applicable)",
-            "GEB Biovac\n(Auto)" : "GEB Biovac\n(si applicable)",
-            "Sérotype Biovac\n(Auto)" : "Sérotype Biovac\n(si applicable)",
-            "GEB client\n(Auto)" : "GEB client\n(si applicable)",
+            "Labo\n(Auto)" : "Laboratoire sous-traitant",
+            "Analyse\n(Auto)" : "Analyse demandée",
+            "Date expédition" : "Date d'expédition"
         },
         //======!! make sure this field is mandatory !!!!!========
         "B",                                         // column letter to detect end of data in target file
         //======!! make sure this field is mandatory !!!!!========
         "Demandeur",                                          // fields to detect end of data in source file
-        ['Date transfert auto demande'],                      // target field filled with current date ['nom1', 'nom2'] ou [] si aucun
+        [],                      // target field filled with current date ['nom1', 'nom2'] ou [] si aucun
         // target field filled with raw text "target_field_name": "text". {} si aucun champ de type texte
         {},
-        ['Malditof'],                                                     //source field(s) that must all be true
-        ['Annuler demande'],                                              //source field(s) that must all be false   
+        ['Envoi externe\n(Auto)'], ['Envoyé\n(Auto)']                    //source field(s) that must all be true
+        ['Annuler demande'],                                             //source field(s) that must all be false   
         'export_vers_suivi_analyses_externes',                 //ID unique du script pour stocker les lignes atteintes
-         0                                              // no de la ligne a laquelle commencer, est ignoré si zéro ou si cette ligne est dépassée
+        'suivi ligne exportées',                                            // header of column to store exportation status
     );
     ExportManager.run_export();
 }
 // ================================================ TESTS ============================================
 // those test are not unit test, they are intended to interactively test the setup by adjusting values
 function reset_last_line(){
-  PropertiesService.getScriptProperties().setProperty("ExportManager.export_vers_planning_malditof", 30);
+  PropertiesService.getScriptProperties().setProperty("ExportManager.export_vers_planning_malditof", 0);
 }
 
 function check_last_line(){
