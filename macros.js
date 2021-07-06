@@ -20,7 +20,7 @@ function URL_FEUILLE() {
 
 // fonction appelée par le bouton
 function envoiMailDemandeAnalyse() {
-  sendEmail("magali.bossiere@ceva.com, alexandre.brechet@ceva.com, romain.skowron@ceva.com, lea.legrand@ceva.com, karine.gauvin@ceva.com, amandine.laigle@ceva.com, nelly.lesceau@ceva.com, aline.fromont@ceva.com","Nouvelle demande d'analyse",36);
+  sendEmail("magali.bossiere@ceva.com, alexandre.brechet@ceva.com, romain.skowron@ceva.com, lea.legrand@ceva.com, karine.gauvin@ceva.com, amandine.laigle@ceva.com, nelly.lesceau@ceva.com, aline.fromont@ceva.com","Nouvelle demande d'analyse",52);
 }
 
 

@@ -175,7 +175,7 @@ function export_vers_demande_repiquage(){
             "Condition d'incubation\n\n\n(si demande particulière)" : "Incubation\n(si demande particulière)",
             "Nb de boîtes à repiquer\n\n\n(si demande particulière)" : "Nb de boîtes (si demande particulière)",
             "Commentaire labo bactério" : "Commentaires (interne labo)",
-            "Commentaire à l'attention de Ceva Biovac" : "Commentaires demandeur\n(si applicable)"
+            "Commentaire à l'intention du service bactériologie" : "Commentaires demandeur\n(si applicable)"
         },
         //======!! make sure this field is mandatory !!!!!========
         "A",                                            // column letter to detect end of data in target file
@@ -186,7 +186,7 @@ function export_vers_demande_repiquage(){
         {
             "Destination repiquage": "Labo bactério"
         },
-        ['Demande de repiquage'],['Validation identification\n(Auto)']      //source field(s) that must all be true
+        ['Demande de repiquage', 'Validation identification\n(Auto)'],      //source field(s) that must all be true
         ['Annuler demande'],                                                //source field(s) that must all be false   
         'export_vers_demande_repiquage',                                    //ID unique du script pour stocker les lignes atteintes
         'suivi ligne exportées',                                            // header of column to store exportation status
@@ -237,8 +237,7 @@ function export_vers_suivi_analyses_externes(){
             "Demandeur": "Demandeur",
             "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Ref souche Biovac",
             "Ref souche client\n(Auto)" : "Ref souche client\n(si applicable)",
-            "Labo\n(Auto)" : "Laboratoire sous-traitant",
-            "Analyse\n(Auto)" : "Analyse demandée",
+            "Labo/Analyse\n\n\n\n\n(si analyse externe)" : "Laboratoire sous-traitant/Analyse demandée",
             "Date expédition" : "Date d'expédition"
         },
         //======!! make sure this field is mandatory !!!!!========
@@ -248,7 +247,7 @@ function export_vers_suivi_analyses_externes(){
         [],                      // target field filled with current date ['nom1', 'nom2'] ou [] si aucun
         // target field filled with raw text "target_field_name": "text". {} si aucun champ de type texte
         {},
-        ['Envoi externe\n(Auto)'], ['Envoyé\n(Auto)']                    //source field(s) that must all be true
+        ['Envoi externe\n(Auto)', 'Date expédition'],                    //source field(s) that must all be true
         ['Annuler demande'],                                             //source field(s) that must all be false   
         'export_vers_suivi_analyses_externes',                 //ID unique du script pour stocker les lignes atteintes
         'suivi ligne exportées',                                            // header of column to store exportation status
@@ -311,4 +310,8 @@ function test_init(){
     console.log("must be exported 48  ", ExportManager.must_be_exported(48));
     console.log("last_line", PropertiesService.getScriptProperties().getProperty('ExportManager.testValue'));
     //ExportManager.copy_line_to_target(48,ExportManager.get_first_free_line_of_target())
+}
+
+function test_formule(){
+  console.log(activeSheet().getRange("A81").getValue());
 }
