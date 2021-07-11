@@ -36,7 +36,7 @@ var ExportManager = {
         console.log("find header <",field,"> in ",sheet.getName());
         if(!(field && sheet)){return null;}
         for(var line=1;line <= this.max_header_line; line++){
-            for(var col=1; col <= sheet.getLastColumn(); col++){
+            for(var col=1; col <= 54; col++){
                 if(sheet.getRange(line,col).getValue() == field){
                     console.log("find-header found  ",field," at line ",line," col ", col, " of ",sheet.getName());
                     return col;
@@ -168,12 +168,13 @@ function export_vers_demande_repiquage(){
         // maping des champs "source": "target" séparé pas  des virgules
         {
             "Demandeur": "Demandeur / origine demande",
-            "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "n°CL FMP12",
+            "Référence échantillon demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "n°CL FMP12",
             "N° demande" : "N° demande\n(si applicable)",
             "Labo\n(Auto)" : "Labo destinataire de l'envoi\n(si applicable)",
             "Milieu de repiquage\n\n\n(si demande particulière)" : "Milieu\n(si demande particulière)",
             "Condition d'incubation\n\n\n(si demande particulière)" : "Incubation\n(si demande particulière)",
             "Nb de boîtes à repiquer\n\n\n(si demande particulière)" : "Nb de boîtes (si demande particulière)",
+            "Souche à envoyer sous quelle forme\n\n\n\n(si analyse externe)" : "Repiquage sous quelle forme (si demande particulière)",
             "Commentaire labo bactério" : "Commentaires (interne labo)",
             "Commentaire à l'intention du service bactériologie" : "Commentaires demandeur\n(si applicable)"
         },
@@ -205,7 +206,7 @@ function export_vers_planning_malditof(){
         {
             "N° demande": "Origine demande",
             "Date demande\n(envoi email Ctrl+Alt+Shift+1)": "Date de la demande ou date réception souche",
-            "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Référence",
+            "Référence échantillon demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Référence",
             "GEB client\n(Auto)" : "GEB client\n(si applicable)",
             "GEB Biovac\n(Auto)" : "GEB Biovac\n(si applicable)"
         },
@@ -235,7 +236,7 @@ function export_vers_suivi_analyses_externes(){
         {
             "N° demande": "N° demande\n(si applicable)",
             "Demandeur": "Demandeur",
-            "Référence souche demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Ref souche Biovac",
+            "Référence échantillon demandeur\n(N°Cl si souchotèque Ceva Biovac)" : "Ref souche Biovac",
             "Ref souche client\n(Auto)" : "Ref souche client\n(si applicable)",
             "Labo/Analyse\n\n\n\n\n(si analyse externe)" : "Laboratoire sous-traitant/Analyse demandée",
             "Date expédition" : "Date d'expédition"
@@ -246,7 +247,9 @@ function export_vers_suivi_analyses_externes(){
         "Demandeur",                                          // fields to detect end of data in source file
         [],                      // target field filled with current date ['nom1', 'nom2'] ou [] si aucun
         // target field filled with raw text "target_field_name": "text". {} si aucun champ de type texte
-        {},
+        {
+          "Nb d'analyses": "1"
+        },
         ['Envoi externe\n(Auto)', 'Date expédition'],                    //source field(s) that must all be true
         ['Annuler demande'],                                             //source field(s) that must all be false   
         'export_vers_suivi_analyses_externes',                 //ID unique du script pour stocker les lignes atteintes
